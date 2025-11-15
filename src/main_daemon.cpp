@@ -2,20 +2,26 @@
 #include <fstream>
 #include <filesystem>
 #include <cstdlib>
+#include <syslog.h>
+
+#define info(...) syslog(LOG_INFO, __VA_ARGS__)
+#define err(...) syslog(LOG_ERR, __VA_ARGS__)
 
 namespace fs = std::filesystem;
 
 int main() {
+    openlog("fastpackagemanager", LOG_PID | LOG_CONS, LOG_DAEMON);
+
     const std::string stateFile = "/var/lib/fastpackagemanager/state";
 
     if (!fs::exists(stateFile)) {
-        std::cout << "Running initial setup...\n";
+        info("Running initial setup...\n");
 
         // 1. Mount /packages
         // Replace with actual mount command or system call
         int mountStatus = system("mount /packages");
         if (mountStatus != 0) {
-            std::cerr << "Failed to mount /packages\n";
+            err("Failed to mount /packages\n");
             return 1;
         }
 
@@ -34,7 +40,7 @@ int main() {
         state << "initialized=true\n";
         state.close();
 
-        std::cout << "Initialization completed.\n";
+        info("Initialization completed.\n");
     };
 
     return 0;
