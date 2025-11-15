@@ -1,5 +1,59 @@
-int main(int argc, char* argv[]) {
-    
+#include <fstream>
+#include <filesystem>
+#include <cstdlib>
+#include <syslog.h>
 
-    return 0;
+#define info(...) syslog(LOG_INFO, __VA_ARGS__)
+#define err(...) syslog(LOG_ERR, __VA_ARGS__)
+
+namespace fs = std::filesystem;
+
+[[noreturn]] void cleanup(int exitcode) {
+    closelog();
+    exit(exitcode);
+    __builtin_unreachable();
+}
+
+[[noreturn]] void daemon_mainloop() {
+    cleanup(0);
+    __builtin_unreachable();
+}
+
+[[noreturn]] int main() {
+    openlog("fastpackagemanager", LOG_PID | LOG_CONS, LOG_DAEMON);
+
+    const std::string stateFile = "/var/lib/fastpackagemanager/state";
+
+    if (!fs::exists(stateFile)) {
+        info("Running initial setup...\n");
+
+        // 1. Mount /packages
+        // Replace with actual mount command or system call
+        int mountStatus = system("mount /packages");
+        if (mountStatus != 0) {
+            err("Failed to mount /packages\n");
+            cleanup(1);
+        }
+
+        // 2. Create /var/cache/packagecache
+        fs::create_directories("/var/cache/packagecache");
+
+        // 3. Create /etc/fastpackagemanager/permissions.ini directory + file
+        fs::create_directories("/etc/fastpackagemanager");
+        std::ofstream ini("/etc/fastpackagemanager/permissions.ini");
+        ini << "; initial permissions file\n";
+        ini.close();
+
+        // 4. Write state marker
+        fs::create_directories("/var/lib/fastpackagemanager");
+        std::ofstream state(stateFile);
+        state << "initialized=true\n";
+        state.close();
+
+        info("Initialization completed.\n");
+    };
+
+    daemon_mainloop();
+
+    __builtin_unreachable();
 }
