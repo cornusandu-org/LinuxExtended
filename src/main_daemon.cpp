@@ -43,5 +43,6 @@ int main() {
         info("Initialization completed.\n");
     };
 
+    closelog();
     return 0;
 }
