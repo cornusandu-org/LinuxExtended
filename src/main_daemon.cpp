@@ -9,6 +9,17 @@
 
 namespace fs = std::filesystem;
 
+[[noreturn]] void cleanup(int exitcode) {
+    closelog();
+    exit(exitcode);
+    __builtin_unreachable();
+}
+
+[[noreturn]] void daemon_mainloop() {
+    cleanup(0);
+    __builtin_unreachable();
+}
+
 int main() {
     openlog("fastpackagemanager", LOG_PID | LOG_CONS, LOG_DAEMON);
 
@@ -42,6 +53,8 @@ int main() {
 
         info("Initialization completed.\n");
     };
+
+    daemon_mainloop();
 
     closelog();
     return 0;
