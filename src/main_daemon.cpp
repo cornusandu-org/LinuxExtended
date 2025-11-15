@@ -20,7 +20,7 @@ namespace fs = std::filesystem;
     __builtin_unreachable();
 }
 
-int main() {
+[[noreturn]] int main() {
     openlog("fastpackagemanager", LOG_PID | LOG_CONS, LOG_DAEMON);
 
     const std::string stateFile = "/var/lib/fastpackagemanager/state";
@@ -33,7 +33,7 @@ int main() {
         int mountStatus = system("mount /packages");
         if (mountStatus != 0) {
             err("Failed to mount /packages\n");
-            return 1;
+            cleanup(1);
         }
 
         // 2. Create /var/cache/packagecache
@@ -56,6 +56,5 @@ int main() {
 
     daemon_mainloop();
 
-    closelog();
-    return 0;
+    __builtin_unreachable();
 }
