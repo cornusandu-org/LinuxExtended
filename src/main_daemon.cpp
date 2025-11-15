@@ -1,5 +1,41 @@
-int main(int argc, char* argv[]) {
-    
+#include <iostream>
+#include <fstream>
+#include <filesystem>
+#include <cstdlib>
+
+namespace fs = std::filesystem;
+
+int main() {
+    const std::string stateFile = "/var/lib/fastpackagemanager/state";
+
+    if (!fs::exists(stateFile)) {
+        std::cout << "Running initial setup...\n";
+
+        // 1. Mount /packages
+        // Replace with actual mount command or system call
+        int mountStatus = system("mount /packages");
+        if (mountStatus != 0) {
+            std::cerr << "Failed to mount /packages\n";
+            return 1;
+        }
+
+        // 2. Create /var/cache/packagecache
+        fs::create_directories("/var/cache/packagecache");
+
+        // 3. Create /etc/fastpackagemanager/permissions.ini directory + file
+        fs::create_directories("/etc/fastpackagemanager");
+        std::ofstream ini("/etc/fastpackagemanager/permissions.ini");
+        ini << "; initial permissions file\n";
+        ini.close();
+
+        // 4. Write state marker
+        fs::create_directories("/var/lib/fastpackagemanager");
+        std::ofstream state(stateFile);
+        state << "initialized=true\n";
+        state.close();
+
+        std::cout << "Initialization completed.\n";
+    };
 
     return 0;
 }
